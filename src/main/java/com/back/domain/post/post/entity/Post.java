@@ -31,6 +31,11 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
+    public void modify(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
     public PostComment addComment(String content) {
         PostComment postComment = new PostComment(this, content);
         comments.add(postComment);

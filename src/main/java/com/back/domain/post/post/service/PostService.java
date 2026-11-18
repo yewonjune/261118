@@ -28,4 +28,8 @@ public class PostService {
     public Optional<Post> findById(int id) {
         return postRepository.findById(id);
     }
+
+    public void modify(Post post, String title, String content) {
+        post.modify(title, content);
+    }
 }

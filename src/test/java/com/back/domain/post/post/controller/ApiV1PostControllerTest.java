@@ -229,4 +229,45 @@ public class ApiV1PostControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.resultCode").value("404-1"));
     }
+
+    @Test
+    @DisplayName("글 삭제")
+    void t8() throws Exception {
+        // given
+        int id = 1;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(delete("/api/v1/posts/%d".formatted(id)))
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("%d번 글이 삭제되었습니다.".formatted(id)));
+
+        assertThat(postRepository.findById(id)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("글 삭제, 존재하지 않는 글이면 404")
+    void t9() throws Exception {
+        // given
+        int id = Integer.MAX_VALUE;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(delete("/api/v1/posts/%d".formatted(id)))
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"));
+    }
 }

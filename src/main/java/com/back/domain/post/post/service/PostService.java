@@ -45,4 +45,8 @@ public class PostService {
 
         return postComment;
     }
+
+    public void modifyComment(PostComment postComment, String content) {
+        postComment.modify(content);
+    }
 }

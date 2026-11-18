@@ -100,4 +100,52 @@ public class ApiV1PostCommentControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.resultCode").value("404-1"));
     }
+
+    @Test
+    @DisplayName("댓글 단건조회")
+    void t4() throws Exception {
+        // given
+        int postId = 1;
+        int id = 1;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(get("/api/v1/posts/%d/comments/%d".formatted(postId, id)))
+                .andDo(print());
+
+        // then
+        PostComment comment = postRepository.findById(postId).get()
+                .findCommentById(id).get();
+
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("getItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.createDate").value(Matchers.startsWith(comment.getCreateDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.modifyDate").value(Matchers.startsWith(comment.getModifyDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.postId").value(postId))
+                .andExpect(jsonPath("$.content").value("댓글 1-1"));
+    }
+
+    @Test
+    @DisplayName("댓글 단건조회, 다른 글에 달린 댓글이면 404")
+    void t5() throws Exception {
+        // given: 4번 댓글은 2번 글의 댓글
+        int postId = 1;
+        int id = 4;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(get("/api/v1/posts/%d/comments/%d".formatted(postId, id)))
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("getItem"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"))
+                .andExpect(jsonPath("$.msg").value("해당 데이터가 존재하지 않습니다."));
+    }
 }

@@ -57,4 +57,49 @@ public class ApiV1PostControllerTest {
                     .andExpect(jsonPath("$[%d].content".formatted(i)).value(post.getContent()));
         }
     }
+
+    @Test
+    @DisplayName("글 단건조회")
+    void t2() throws Exception {
+        // given
+        int id = 1;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(get("/api/v1/posts/%d".formatted(id)))
+                .andDo(print());
+
+        // then
+        Post post = postRepository.findById(id).get();
+
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("getItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(post.getId()))
+                .andExpect(jsonPath("$.createDate").value(Matchers.startsWith(post.getCreateDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.modifyDate").value(Matchers.startsWith(post.getModifyDate().toString().substring(0, 20))))
+                .andExpect(jsonPath("$.title").value("제목 1"))
+                .andExpect(jsonPath("$.content").value("내용 1"));
+    }
+
+    @Test
+    @DisplayName("글 단건조회, 존재하지 않는 글이면 404")
+    void t3() throws Exception {
+        // given
+        int id = Integer.MAX_VALUE;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(get("/api/v1/posts/%d".formatted(id)))
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("getItem"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"))
+                .andExpect(jsonPath("$.msg").value("해당 데이터가 존재하지 않습니다."));
+    }
 }

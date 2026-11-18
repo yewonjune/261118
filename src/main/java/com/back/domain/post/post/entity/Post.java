@@ -49,4 +49,8 @@ public class Post extends BaseEntity {
                 .filter(comment -> comment.getId() == id)
                 .findFirst();
     }
+
+    public void deleteComment(PostComment postComment) {
+        comments.remove(postComment);
+    }
 }

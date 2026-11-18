@@ -283,4 +283,51 @@ public class ApiV1PostCommentControllerTest {
                 .findCommentById(id).get();
         assertThat(comment.getContent()).isEqualTo("댓글 2-1");
     }
+
+    @Test
+    @DisplayName("댓글 삭제")
+    void t10() throws Exception {
+        // given
+        int postId = 1;
+        int id = 1;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(delete("/api/v1/posts/%d/comments/%d".formatted(postId, id)))
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("%d번 댓글이 삭제되었습니다.".formatted(id)));
+
+        Post post = postRepository.findById(postId).get();
+        assertThat(post.findCommentById(id)).isEmpty();
+        assertThat(post.getComments()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("댓글 삭제, 다른 글에 달린 댓글이면 404")
+    void t11() throws Exception {
+        // given: 4번 댓글은 2번 글의 댓글
+        int postId = 1;
+        int id = 4;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(delete("/api/v1/posts/%d/comments/%d".formatted(postId, id)))
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("delete"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"));
+
+        assertThat(postRepository.findById(2).get().findCommentById(id)).isPresent();
+    }
 }

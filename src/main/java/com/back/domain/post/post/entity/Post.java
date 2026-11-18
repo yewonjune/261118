@@ -45,6 +45,8 @@ public class Post extends BaseEntity {
     }
 
     public Optional<PostComment> findCommentById(int id) {
-        return Optional.empty();
+        return comments.stream()
+                .filter(comment -> comment.getId() == id)
+                .findFirst();
     }
 }

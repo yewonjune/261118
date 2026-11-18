@@ -168,4 +168,65 @@ public class ApiV1PostControllerTest {
 
         assertThat(postRepository.count()).isEqualTo(countBefore);
     }
+
+    @Test
+    @DisplayName("글 수정")
+    void t6() throws Exception {
+        // given
+        int id = 1;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/api/v1/posts/%d".formatted(id))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "title": "제목 수정",
+                                            "content": "내용 수정"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("modify"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("%d번 글이 수정되었습니다.".formatted(id)));
+
+        Post post = postRepository.findById(id).get();
+        assertThat(post.getTitle()).isEqualTo("제목 수정");
+        assertThat(post.getContent()).isEqualTo("내용 수정");
+    }
+
+    @Test
+    @DisplayName("글 수정, 존재하지 않는 글이면 404")
+    void t7() throws Exception {
+        // given
+        int id = Integer.MAX_VALUE;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/api/v1/posts/%d".formatted(id))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "title": "제목 수정",
+                                            "content": "내용 수정"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostController.class))
+                .andExpect(handler().methodName("modify"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"));
+    }
 }

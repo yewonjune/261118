@@ -218,4 +218,69 @@ public class ApiV1PostCommentControllerTest {
 
         assertThat(postRepository.findById(postId).get().getComments()).hasSize(3);
     }
+
+    @Test
+    @DisplayName("댓글 수정")
+    void t8() throws Exception {
+        // given
+        int postId = 1;
+        int id = 1;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/api/v1/posts/%d/comments/%d".formatted(postId, id))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "content": "댓글 수정"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("modify"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("%d번 댓글이 수정되었습니다.".formatted(id)));
+
+        PostComment comment = postRepository.findById(postId).get()
+                .findCommentById(id).get();
+        assertThat(comment.getContent()).isEqualTo("댓글 수정");
+    }
+
+    @Test
+    @DisplayName("댓글 수정, 다른 글에 달린 댓글이면 404")
+    void t9() throws Exception {
+        // given: 4번 댓글은 2번 글의 댓글
+        int postId = 1;
+        int id = 4;
+
+        // when
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/api/v1/posts/%d/comments/%d".formatted(postId, id))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "content": "댓글 수정"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        // then
+        resultActions
+                .andExpect(handler().handlerType(ApiV1PostCommentController.class))
+                .andExpect(handler().methodName("modify"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"));
+
+        PostComment comment = postRepository.findById(2).get()
+                .findCommentById(id).get();
+        assertThat(comment.getContent()).isEqualTo("댓글 2-1");
+    }
 }

@@ -5,6 +5,8 @@ import com.back.domain.post.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -16,5 +18,9 @@ public class PostService {
 
     public Post write(String title, String content) {
         return postRepository.save(new Post(title, content));
+    }
+
+    public List<Post> findAll() {
+        return postRepository.findAllByOrderByIdDesc();
     }
 }
